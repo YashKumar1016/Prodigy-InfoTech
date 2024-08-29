@@ -1,0 +1,61 @@
+#include <stdio.h>
+
+double celsius_to_fahrenheit(double celsius) {
+    return (celsius * 9.0 / 5.0) + 32.0;
+}
+
+double celsius_to_kelvin(double celsius) {
+    return celsius + 273.15;
+}
+
+double fahrenheit_to_celsius(double fahrenheit) {
+    return (fahrenheit - 32.0) * 5.0 / 9.0;
+}
+
+double fahrenheit_to_kelvin(double fahrenheit) {
+    return (fahrenheit - 32.0) * 5.0 / 9.0 + 273.15;
+}
+
+double kelvin_to_celsius(double kelvin) {
+    return kelvin - 273.15;
+}
+
+double kelvin_to_fahrenheit(double kelvin) {
+    return (kelvin - 273.15) * 9.0 / 5.0 + 32.0;
+}
+
+void convert_temperature(double value, char unit) {
+    if (unit == 'C' || unit == 'c') {
+        double fahrenheit = celsius_to_fahrenheit(value);
+        double kelvin = celsius_to_kelvin(value);
+        printf("%.2f°C is %.2f°F and %.2fK\n", value, fahrenheit, kelvin);
+    } else if (unit == 'F' || unit == 'f') {
+        double celsius = fahrenheit_to_celsius(value);
+        double kelvin = fahrenheit_to_kelvin(value);
+        printf("%.2f°F is %.2f°C and %.2fK\n", value, celsius, kelvin);
+    } else if (unit == 'K' || unit == 'k') {
+        double celsius = kelvin_to_celsius(value);
+        double fahrenheit = kelvin_to_fahrenheit(value);
+        printf("%.2fK is %.2f°C and %.2f°F\n", value, celsius, fahrenheit);
+    } else {
+        printf("Invalid unit. Please enter 'C' for Celsius, 'F' for Fahrenheit, or 'K' for Kelvin.\n");
+    }
+}
+
+int main() {
+    double value;
+    char unit;
+
+    printf("Enter the temperature value: ");
+    if (scanf("%lf", &value) != 1) {
+        printf("Invalid input. Please enter a numeric value for the temperature.\n");
+        return 1;
+    }
+
+    printf("Enter the unit of the temperature (C, F, K): ");
+    scanf(" %c", &unit);
+
+    convert_temperature(value, unit);
+
+    return 0;
+}
