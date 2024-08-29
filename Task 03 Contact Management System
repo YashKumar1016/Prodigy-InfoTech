@@ -1,0 +1,175 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_NAME_LEN 100
+#define MAX_PHONE_LEN 15
+#define MAX_EMAIL_LEN 100
+#define FILENAME "contacts.dat"
+
+typedef struct {
+    char name[MAX_NAME_LEN];
+    char phone[MAX_PHONE_LEN];
+    char email[MAX_EMAIL_LEN];
+} Contact;
+
+void add_contact();
+void view_contacts();
+void edit_contact();
+void delete_contact();
+void list_contacts();
+void save_contacts(Contact *contacts, int count);
+int load_contacts(Contact *contacts);
+
+int main() {
+    int choice;
+    while (1) {
+        printf("\nContact Manager\n");
+        printf("1. Add Contact\n");
+        printf("2. View Contacts\n");
+        printf("3. Edit Contact\n");
+        printf("4. Delete Contact\n");
+        printf("5. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+        getchar();  // Consume newline character
+        
+        switch (choice) {
+            case 1:
+                add_contact();
+                break;
+            case 2:
+                view_contacts();
+                break;
+            case 3:
+                edit_contact();
+                break;
+            case 4:
+                delete_contact();
+                break;
+            case 5:
+                printf("Exiting...\n");
+                return 0;
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    }
+}
+
+void add_contact() {
+    FILE *file = fopen(FILENAME, "ab");
+    if (!file) {
+        perror("Unable to open file");
+        return;
+    }
+
+    Contact contact;
+    printf("Enter name: ");
+    fgets(contact.name, MAX_NAME_LEN, stdin);
+    contact.name[strcspn(contact.name, "\n")] = '\0'; // Remove newline character
+
+    printf("Enter phone number: ");
+    fgets(contact.phone, MAX_PHONE_LEN, stdin);
+    contact.phone[strcspn(contact.phone, "\n")] = '\0'; // Remove newline character
+
+    printf("Enter email address: ");
+    fgets(contact.email, MAX_EMAIL_LEN, stdin);
+    contact.email[strcspn(contact.email, "\n")] = '\0'; // Remove newline character
+
+    fwrite(&contact, sizeof(Contact), 1, file);
+    fclose(file);
+    printf("Contact added successfully.\n");
+}
+
+void view_contacts() {
+    FILE *file = fopen(FILENAME, "rb");
+    if (!file) {
+        perror("Unable to open file");
+        return;
+    }
+
+    Contact contact;
+    printf("\nContact List:\n");
+    while (fread(&contact, sizeof(Contact), 1, file)) {
+        printf("Name: %s\n", contact.name);
+        printf("Phone: %s\n", contact.phone);
+        printf("Email: %s\n", contact.email);
+        printf("----------------------\n");
+    }
+    fclose(file);
+}
+
+void edit_contact() {
+    FILE *file = fopen(FILENAME, "r+b");
+    if (!file) {
+        perror("Unable to open file");
+        return;
+    }
+
+    char name[MAX_NAME_LEN];
+    printf("Enter the name of the contact to edit: ");
+    fgets(name, MAX_NAME_LEN, stdin);
+    name[strcspn(name, "\n")] = '\0'; // Remove newline character
+
+    Contact contact;
+    int found = 0;
+    while (fread(&contact, sizeof(Contact), 1, file)) {
+        if (strcmp(contact.name, name) == 0) {
+            found = 1;
+            fseek(file, -sizeof(Contact), SEEK_CUR);
+            printf("Enter new phone number: ");
+            fgets(contact.phone, MAX_PHONE_LEN, stdin);
+            contact.phone[strcspn(contact.phone, "\n")] = '\0'; // Remove newline character
+
+            printf("Enter new email address: ");
+            fgets(contact.email, MAX_EMAIL_LEN, stdin);
+            contact.email[strcspn(contact.email, "\n")] = '\0'; // Remove newline character
+
+            fwrite(&contact, sizeof(Contact), 1, file);
+            printf("Contact updated successfully.\n");
+            break;
+        }
+    }
+    if (!found) {
+        printf("Contact not found.\n");
+    }
+    fclose(file);
+}
+
+void delete_contact() {
+    FILE *file = fopen(FILENAME, "rb");
+    if (!file) {
+        perror("Unable to open file");
+        return;
+    }
+
+    FILE *temp_file = fopen("temp.dat", "wb");
+    if (!temp_file) {
+        perror("Unable to open temporary file");
+        fclose(file);
+        return;
+    }
+
+    char name[MAX_NAME_LEN];
+    printf("Enter the name of the contact to delete: ");
+    fgets(name, MAX_NAME_LEN, stdin);
+    name[strcspn(name, "\n")] = '\0'; // Remove newline character
+
+    Contact contact;
+    int found = 0;
+    while (fread(&contact, sizeof(Contact), 1, file)) {
+        if (strcmp(contact.name, name) == 0) {
+            found = 1;
+            printf("Contact deleted successfully.\n");
+        } else {
+            fwrite(&contact, sizeof(Contact), 1, temp_file);
+        }
+    }
+    if (!found) {
+        printf("Contact not found.\n");
+    }
+    fclose(file);
+    fclose(temp_file);
+    remove(FILENAME);
+    rename("temp.dat", FILENAME);
+}
